@@ -1,0 +1,173 @@
+﻿<!-- saved from url=(0014)about:internet -->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+	<title>Flot Visual</title>
+
+	<!--[if lte IE 8]><script language="javascript" type="text/javascript" src="excanvas.min.js"></script><![endif]-->
+	<script language="javascript" type="text/javascript" src="jquery.min.js"></script>
+	<script language="javascript" type="text/javascript" src="jquery.flot.min.js"></script>
+	<script language="javascript" type="text/javascript" src="jquery.flot.resize.min.js"></script>
+	<script language="javascript" type="text/javascript" src="jquery.flot.selection.min.js"></script>
+
+	<script type="text/javascript">
+	$(function () {
+
+		var canvas = $("#canvas");
+		var marking = "EndersPsyche.com";
+
+		////////////////////////////////////////////////////////////////////////////////
+		//
+		// Data sets
+		//
+		////////////////////////////////////////////////////////////////////////////////
+        
+        var datasets = [];
+
+		////////////////////////////////////////////////////////////////////////////////
+		//
+		// Custom options for the Flot canvas
+		//
+		////////////////////////////////////////////////////////////////////////////////
+
+		var options = { 
+			series: {
+				lines: { show: true },
+				points: { show: true }
+			},
+			grid: {
+				hoverable: true,
+				clickable: false
+			},
+			yaxis: { min: 0 },
+			xaxis: { tickDecimals: 0 },
+			selection: { mode: "x" }
+		};
+
+		////////////////////////////////////////////////////////////////////////////////
+		//
+		// Generic method to pull relevant data
+		//
+		////////////////////////////////////////////////////////////////////////////////
+
+		function getData(choices) {
+			return [ datasets ];
+		}
+
+		////////////////////////////////////////////////////////////////////////////////
+		//
+		// Apply the watermark or branding
+		//
+		////////////////////////////////////////////////////////////////////////////////
+
+		function applyBrand(left, top, marking) {
+			canvas.append
+				(
+					'<div style="position: absolute;'
+					+ 'left: ' + (left + 30) + 'px;'
+					+ 'top: ' + (top + 10) + 'px;'
+					+ 'color: #000;'
+					+ 'font-variant: small-caps;'
+					+ 'font-weight: bolder;'
+					+ '">' 
+					+ marking 
+					+ '</div>'
+				);
+		}
+
+		////////////////////////////////////////////////////////////////////////////////
+		//
+		// Zoom In/Out
+		// Example from: http://people.iola.dk/olau/flot/examples/selection.html
+		//
+		////////////////////////////////////////////////////////////////////////////////
+
+		canvas.bind("plotselected", function (event, ranges) {
+			var plot = $.plot(canvas, getData(), $.extend(
+					true, 
+					{}, 
+					options, 
+					{ xaxis: { min: ranges.xaxis.from, max: ranges.xaxis.to } }
+				)
+			);
+
+			applyBrand(ranges.xaxis.from, ranges.yaxis.from, marking);
+		});
+
+		canvas.dblclick(function () {
+			plotAccordingToChoices();
+			return false;
+		});
+
+		////////////////////////////////////////////////////////////////////////////////
+		//
+		// Tooltips
+		// Example from: http://people.iola.dk/olau/flot/examples/interacting.html
+		//
+		////////////////////////////////////////////////////////////////////////////////
+
+		function showTooltip(x, y, contents) {
+			$('<div id="tooltip">' + contents + '</div>').css( {
+				position: 'absolute',
+				display: 'none',
+				top: y + 5,
+				left: x + 5,
+				border: '1px solid #BDEDFF',
+				padding: '2px',
+				'background-color': '#E0FFFF',
+				opacity: 0.80
+			}).appendTo("body").fadeIn(200);
+		}
+
+		var previousPoint = null;
+		canvas.bind("plothover", function (event, pos, item) {
+			if (item) {
+				if (previousPoint != item.dataIndex) {
+					previousPoint = item.dataIndex;
+                   
+					$("#tooltip").remove();
+					var ttl = item.datapoint[1].toFixed(2);
+                   
+					showTooltip
+						(
+							item.pageX, 
+							item.pageY,
+							"TTL: " + ttl + " ms"
+						);
+				}
+			}
+			else {
+				$("#tooltip").remove();
+				previousPoint = null;            
+			}
+		});
+
+		////////////////////////////////////////////////////////////////////////////////
+		//
+		// Dataset Toggle
+		// Example from: http://people.iola.dk/olau/flot/examples/turning-series.html
+		//
+		////////////////////////////////////////////////////////////////////////////////
+
+		function plotAccordingToChoices() {
+			var data = getData();
+
+			if (data.length > 0) {
+				var plot = $.plot(canvas, data, options);
+				applyBrand(0, 0, marking);
+			}
+		};
+
+		plotAccordingToChoices();		
+	});
+	</script>
+
+</head>
+<body>
+	<!-- The actual canvas and working area -->
+
+	<p>
+		<div id="canvas" style="width: 50%; height: 50%;"></div>
+	</p>
+</body>
+</html>
